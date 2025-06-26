@@ -90,9 +90,9 @@ def generate_signals(df: pd.DataFrame) -> pd.DataFrame:
     df["Score_sell"] = df[sell_cols].sum(axis=1)
     # 최종 시그널(동일=0, 다르면 큰 쪽)
     df["Signal"] = (
-        (df["Score_buy"]  > df["Score_sell"]).astype(int)
-      - (df["Score_sell"] > df["Score_buy"]).astype(int)
-    )
+    ((df["Score_buy"] > df["Score_sell"]) & (df["Score_buy"] >= 2)).astype(int)
+  - ((df["Score_sell"] > df["Score_buy"]) & (df["Score_sell"] >= 2)).astype(int))
+
     return df
 
 @app.get("/signals/{ticker}")
