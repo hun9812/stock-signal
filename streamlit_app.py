@@ -23,8 +23,10 @@ conditions = {
 }
 
 cond_df = pd.DataFrame(list(conditions.items()), columns=["조건 코드", "설명"])
-with st.expander("🧾 시그널 조건 설명 보기", expanded=True):
-    st.dataframe(cond_df, use_container_width=True, height=300)
+
+# 조건 설명은 항상 표시되도록
+st.subheader("🧾 시그널 조건 설명")
+st.dataframe(cond_df, use_container_width=True, height=300)
 
 # 입력
 st.subheader("🔍 티커 검색")
