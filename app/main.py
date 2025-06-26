@@ -98,3 +98,7 @@ def get_signals(ticker: str):
     df = generate_signals(df)
     out = df.reset_index()[["Date","Signal","Score_buy","Score_sell"]]
     return out.to_dict(orient="records")
+
+@app.get("/")
+def root():
+    return {"message": "Hello form Heroku! 서버는 정상입니다."}
