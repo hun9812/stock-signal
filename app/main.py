@@ -19,7 +19,7 @@ def fetch_history(ticker: str,
     """
     url = (
         "https://www.alphavantage.co/query"
-        f"?function=TIME_SERIES_DAILY_ADJUSTED"
+        f"?function=TIME_SERIES_DAILY"
         f"&symbol={ticker.upper()}"
         f"&outputsize=full"
         f"&apikey={API_KEY}"
@@ -40,7 +40,7 @@ def fetch_history(ticker: str,
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
     # 필요한 기간, 칼럼만 추출
-    df = df.loc[start:end, ["1. open","2. high","3. low","4. close","6. volume"]]
+    df = df.loc[start:end, ["1. open","2. high","3. low","4. close","5. volume"]]
     df.columns = ["Open","High","Low","Close","Volume"]
     df.dropna(inplace=True)
     return df
