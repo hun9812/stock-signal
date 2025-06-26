@@ -103,7 +103,9 @@ def get_signals(ticker: str):
     """
     df = fetch_history(ticker)
     df = generate_signals(df)
-    out = df.reset_index()[["Date","Signal","Score_buy","Score_sell"]]
+    out = df.reset_index().rename(columns={"index": "Date"})[
+    ["Date", "Signal", "Score_buy", "Score_sell"]]
+
     return out.to_dict(orient="records")
 
 @app.get("/")
