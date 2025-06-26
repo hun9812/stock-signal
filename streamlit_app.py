@@ -4,37 +4,29 @@ import requests
 
 API_URL = "https://stock-signal-35232a1d0473.herokuapp.com/signals/"
 
-# 🧾 조건 설명표
+st.title("📈 주식 시그널 검색기")
+
+# 조건 설명 테이블
 conditions = {
-    "S_MA_buy": "MA 조건",
-    "S_MACD_buy": "MACD 조건",
-    "S_RSI_buy": "RSI 조건",
-    "S_BB_buy": "BollingerBand 조건",
-    "S_DC_buy": "Donchian 고점 돌파",
-    "S_Vol_buy": "거래량 급등",
-    "S_RSI_sell": "RSI 조건",
-    "S_BB_sell": "BollingerBand 조건",
-    "S_DC_sell": "Donchian 저점 이탈",
-    "S_Vol_sell": "거래량 급등"
+    "S_MA_buy": "50일 이평 > 200일 이평",
+    "S_MACD_buy": "MACD 히스토그램 양전환",
+    "S_RSI_buy": "RSI < 30",
+    "S_BB_buy": "Bollinger 하단 이탈",
+    "S_DC_buy": "20일 고점 돌파",
+    "S_Vol_buy": "거래량 급등 (20일 평균의 1.5배)",
+    "S_RSI_sell": "RSI > 70",
+    "S_BB_sell": "Bollinger 상단 돌파",
+    "S_DC_sell": "20일 저점 하회",
+    "S_Vol_sell": "거래량 급등 (20일 평균의 1.5배)"
 }
 
-st.title("📈 주식 시그널 검색기")
-ticker = st.text_input("🔍 티커를 입력하세요 (예: AAPL, TSLA), 대소문자 구분 없음")
+cond_df = pd.DataFrame(list(conditions.items()), columns=["조건 코드", "설명"])
+st.subheader("📋 시그널 조건 설명")
+st.dataframe(cond_df, use_container_width=True)
 
-# 📋 조건 설명 표 출력
-if ticker == "":
-    st.subheader("📋 시그널 조건 설명")
-    st.table(pd.DataFrame({
-        "조건 이름": ["MA 조건", "MACD 조건", "RSI 조건", "BollingerBand 조건", "Donchian 고/저점", "거래량 급등"],
-        "설명": [
-            "50일 이평선이 200일 이평선을 상향 돌파",
-            "MACD 히스토그램 > 0",
-            "RSI < 30 (매수), > 70 (매도)",
-            "종가가 밴드 아래 또는 위",
-            "최근 20일 고점 돌파 / 저점 이탈",
-            "20일 평균 대비 거래량 1.5배 초과"
-        ]
-    }))
+# 입력
+st.subheader("🔍 티커 검색")
+ticker = st.text_input("티커를 입력하세요 (예: AAPL, TSLA)", value="")
 
 if st.button("시그널 조회") and ticker:
     url = API_URL + ticker.upper()
@@ -44,23 +36,23 @@ if st.button("시그널 조회") and ticker:
         data = response.json()
         df = pd.DataFrame(data)
         df["Date"] = pd.to_datetime(df["Date"])
-        df = df.sort_values(by="Date", ascending=False)
+        df = df.sort_values("Date", ascending=True).reset_index(drop=True)
 
-        # ✅ 상세 조건을 비고에 표시
+        # 비고 열 추가
         def explain(row):
-            if row["Signal"] == 1:
-                satisfied = [conditions[col] for col in conditions if col.startswith("S_") and "buy" in col and row.get(col, 0) == 1]
-                return "매수: " + ", ".join(satisfied)
-            elif row["Signal"] == -1:
-                satisfied = [conditions[col] for col in conditions if col.startswith("S_") and "sell" in col and row.get(col, 0) == 1]
-                return "매도: " + ", ".join(satisfied)
-            else:
-                return ""
+            if row.get("Signal") == 1:
+                return "매수: " + ", ".join(
+                    conditions[k] for k in conditions if "buy" in k and row.get(k) == 1
+                )
+            elif row.get("Signal") == -1:
+                return "매도: " + ", ".join(
+                    conditions[k] for k in conditions if "sell" in k and row.get(k) == 1
+                )
+            return ""
 
         df["비고"] = df.apply(explain, axis=1)
 
-        # ✅ 필요한 열만 보여주기
-        columns_to_show = ["Date", "Signal", "Score_buy", "Score_sell", "비고"]
-        st.dataframe(df[columns_to_show])
+        st.subheader("📊 시그널 결과")
+        st.dataframe(df, use_container_width=True)
     else:
         st.error(f"❌ 오류: {response.json().get('detail', 'API 호출 실패')}")
