@@ -25,9 +25,16 @@ def fetch_history(ticker: str,
         f"&apikey={API_KEY}"
     )
     res = requests.get(url)
-    data = res.json()
+    try:
+        data = res.json()
+    except Exception:
+        raise HTTPException(500, "API 응답이 JSON이 아님")
+
+    # 🔎 디버깅 메시지 출력
     if "Time Series (Daily)" not in data:
+        print("Alpha Vantage 응답:", data)  # 로그에서 이 메시지 확인 가능
         raise HTTPException(404, "티커 데이터를 찾을 수 없습니다.")
+    
     ts = data["Time Series (Daily)"]
     df = pd.DataFrame.from_dict(ts, orient="index", dtype=float)
     df.index = pd.to_datetime(df.index)
